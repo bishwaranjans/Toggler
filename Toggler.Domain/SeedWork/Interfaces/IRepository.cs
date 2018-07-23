@@ -7,7 +7,7 @@ namespace Toggler.Domain.SeedWork.Interfaces
     {
         Task<IEnumerable<T>> GetAllAsync();
         Task<T> GetAsync(string name);
-        Task<T> CreateAsync(T connectionInfo);
+        Task<T> CreateAsync(T modelInfo);
         Task<T> UpdateAsync(string originalName, T connectionInfo);
         Task<bool> DeleteAsync(string name);
     }

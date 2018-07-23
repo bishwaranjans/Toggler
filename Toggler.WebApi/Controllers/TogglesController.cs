@@ -63,11 +63,12 @@ namespace Toggler.WebApi.Controllers
         public Task Post([FromBody] Toggle toggle)
         {
             ValidateToggleInfo(toggle);
+            CheckExistence(toggle);
             return _toggleRepository.CreateAsync(toggle);
         }
 
         // DELETE: api/Toggles/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{name}")]
         public async Task Delete([FromRoute] string name)
         {
             var result = await _toggleRepository.DeleteAsync(name);
@@ -89,7 +90,10 @@ namespace Toggler.WebApi.Controllers
             {
                 throw new HttpBadRequestException($"Toggle type is not a well defined type. The well defined types are { string.Join(",", Enum.GetNames(typeof(Constants.WellKnownToggleType)))}");
             }
+        }
 
+        private void CheckExistence(Toggle toggle)
+        {
             // Check existence
             var availableToggle = _toggleRepository.GetAsync(toggle.Name).Result;
             if (availableToggle != null && availableToggle.Name.Equals(toggle.Name))

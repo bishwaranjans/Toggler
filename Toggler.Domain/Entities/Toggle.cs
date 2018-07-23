@@ -11,7 +11,5 @@ namespace Toggler.Domain.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public Constants.WellKnownToggleType ToggleType { get; set; }
-
-        public virtual ICollection<ServiceToggle> ToggleServiceCollection { get; set; }
     }
 }
