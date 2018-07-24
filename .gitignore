@@ -10,3 +10,4 @@ obj
 packages
 *.db
 /.vs/Toggler/v15/Server/sqlite3
+*.dtbcache

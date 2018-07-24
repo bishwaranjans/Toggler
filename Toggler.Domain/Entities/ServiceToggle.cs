@@ -12,12 +12,8 @@ namespace Toggler.Domain.Entities
         [Key]
         public string UniqueId { get; set; }
         public bool IsEnabled { get; set; }
-        public string ServiceName { get; set; }
-        public string ServiceVersion { get; set; }
-        public string ServiceDescription { get; set; }
-        public string ToggleName { get; set; }
-        public string ToggleDescription { get; set; }
-        public Constants.WellKnownToggleType ToggleType { get; set; }
+        public Service Service { get; set; }
+        public Toggle Toggle { get; set; }
         public bool IsServiceExcluded { get; set; } = false;
     }
 }

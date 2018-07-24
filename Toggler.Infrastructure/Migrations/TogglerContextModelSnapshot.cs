@@ -15,6 +15,21 @@ namespace Toggler.Infrastructure.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.1.1-rtm-30846");
 
+            modelBuilder.Entity("Toggler.Domain.Entities.Service", b =>
+                {
+                    b.Property<string>("Name")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("Version")
+                        .IsRequired();
+
+                    b.HasKey("Name");
+
+                    b.ToTable("Service");
+                });
+
             modelBuilder.Entity("Toggler.Domain.Entities.ServiceToggle", b =>
                 {
                     b.Property<string>("UniqueId")
@@ -24,19 +39,15 @@ namespace Toggler.Infrastructure.Migrations
 
                     b.Property<bool>("IsServiceExcluded");
 
-                    b.Property<string>("ServiceDescription");
-
                     b.Property<string>("ServiceName");
-
-                    b.Property<string>("ServiceVersion");
-
-                    b.Property<string>("ToggleDescription");
 
                     b.Property<string>("ToggleName");
 
-                    b.Property<int>("ToggleType");
-
                     b.HasKey("UniqueId");
+
+                    b.HasIndex("ServiceName");
+
+                    b.HasIndex("ToggleName");
 
                     b.ToTable("ServiceToggles");
                 });
@@ -48,11 +59,22 @@ namespace Toggler.Infrastructure.Migrations
 
                     b.Property<string>("Description");
 
-                    b.Property<int>("ToggleType");
+                    b.Property<int>("Type");
 
                     b.HasKey("Name");
 
                     b.ToTable("Toggles");
+                });
+
+            modelBuilder.Entity("Toggler.Domain.Entities.ServiceToggle", b =>
+                {
+                    b.HasOne("Toggler.Domain.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceName");
+
+                    b.HasOne("Toggler.Domain.Entities.Toggle", "Toggle")
+                        .WithMany()
+                        .HasForeignKey("ToggleName");
                 });
 #pragma warning restore 612, 618
         }

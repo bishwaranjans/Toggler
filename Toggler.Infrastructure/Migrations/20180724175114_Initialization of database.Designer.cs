@@ -8,14 +8,29 @@ using Toggler.Infrastructure.Repositories;
 namespace Toggler.Infrastructure.Migrations
 {
     [DbContext(typeof(TogglerContext))]
-    [Migration("20180723123919_Intialize DB")]
-    partial class IntializeDB
+    [Migration("20180724175114_Initialization of database")]
+    partial class Initializationofdatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.1.1-rtm-30846");
+
+            modelBuilder.Entity("Toggler.Domain.Entities.Service", b =>
+                {
+                    b.Property<string>("Name")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("Version")
+                        .IsRequired();
+
+                    b.HasKey("Name");
+
+                    b.ToTable("Service");
+                });
 
             modelBuilder.Entity("Toggler.Domain.Entities.ServiceToggle", b =>
                 {
@@ -26,19 +41,15 @@ namespace Toggler.Infrastructure.Migrations
 
                     b.Property<bool>("IsServiceExcluded");
 
-                    b.Property<string>("ServiceDescription");
-
                     b.Property<string>("ServiceName");
-
-                    b.Property<string>("ServiceVersion");
-
-                    b.Property<string>("ToggleDescription");
 
                     b.Property<string>("ToggleName");
 
-                    b.Property<int>("ToggleType");
-
                     b.HasKey("UniqueId");
+
+                    b.HasIndex("ServiceName");
+
+                    b.HasIndex("ToggleName");
 
                     b.ToTable("ServiceToggles");
                 });
@@ -50,11 +61,22 @@ namespace Toggler.Infrastructure.Migrations
 
                     b.Property<string>("Description");
 
-                    b.Property<int>("ToggleType");
+                    b.Property<int>("Type");
 
                     b.HasKey("Name");
 
                     b.ToTable("Toggles");
+                });
+
+            modelBuilder.Entity("Toggler.Domain.Entities.ServiceToggle", b =>
+                {
+                    b.HasOne("Toggler.Domain.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceName");
+
+                    b.HasOne("Toggler.Domain.Entities.Toggle", "Toggle")
+                        .WithMany()
+                        .HasForeignKey("ToggleName");
                 });
 #pragma warning restore 612, 618
         }

@@ -13,12 +13,13 @@ namespace Toggler.WebApi.Controllers
     [ApiController]
     public class ServiceTogglesController : ControllerBase
     {
+        private readonly IRepository<Toggle> _toggleRepository;
         private readonly IRepository<ServiceToggle> _serviceToggleRepository;
 
-        public ServiceTogglesController(IRepository<ServiceToggle> serviceToggleRepository)
+        public ServiceTogglesController(IRepository<Toggle> toggleRepository, IRepository<ServiceToggle> serviceToggleRepository)
         {
             _serviceToggleRepository = serviceToggleRepository;
-
+            _toggleRepository = toggleRepository;
         }
 
         // GET: api/ Service Toggles
@@ -29,7 +30,7 @@ namespace Toggler.WebApi.Controllers
         {
             var serviceRecords = await _serviceToggleRepository.GetAllAsync();
 
-            var requestedServiceRecords = serviceRecords.Where(s => s.ServiceName.Equals(serviceName) && s.ServiceVersion.Equals(version) && s.IsServiceExcluded == false);
+            var requestedServiceRecords = serviceRecords.Where(s => s.Service.Name.Equals(serviceName) && s.Service.Version.Equals(version) && s.IsServiceExcluded == false);
             return requestedServiceRecords;
         }
 
@@ -37,152 +38,196 @@ namespace Toggler.WebApi.Controllers
         [HttpPost]
         public async Task<ServiceToggle> Post([FromBody] ServiceToggle serviceToggle)
         {
+            var allServiceToggleRecords = (await _serviceToggleRepository.GetAllAsync()).ToList();
 
-            var allServiceToggleRecords = _serviceToggleRepository.GetAllAsync().Result;
+            // Validate Toggle existence
+            var toggle = await _toggleRepository.GetAsync(serviceToggle.Toggle.Name);
 
-            #region " BLUE Type Toggle "
-
-            // Always isServiceExcuded = false for BLUE type toggle
-            // ToggleName, ToggleValue, ServiceName/Version
-            // T1, True, S1 : CREATE
-            // T1, False, S1 : UPDATE and make it exclusive now for S1
-            // T1, False, S2 : Prevent as now T1 with false can be used by S1 only
-            // T1, True, S2 : CREATE
-            // 
-            // T2, True, S1 : CREATE
-            // T2, False, S1 : UPDATE and exclusive now for S1
-            // T2, False, S2 : Prevent as now T2 with false can be used by S1 only
-            // T2, True, S2 : CREATE
-            // 
-            // T2, True, S1 : Alreday exists Skip
-            // T2, False, S1 : T2 is now already exclusive for S1, Skip
-            // T2, False, S2 : T2 is now already exclusive for S1, Skip
-            // T2, True, S2 : Already exists
-
-            // Scenario 1 for Blue well known type: 
-            if (serviceToggle.ToggleType == Constants.WellKnownToggleType.Blue)
+            if (toggle == null)
             {
-                // Check the well know type toggle
-                if (serviceToggle.IsServiceExcluded)
-                {
-                    throw new HttpBadRequestException($"For BLUE Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
-                }
+                throw new HttpResourceNotFoundException($"Toggle '{serviceToggle.Toggle.Name}' doesn't exist");
+            }
 
-                var serviceToggleTypeBlueRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.ToggleType == Constants.WellKnownToggleType.Blue).ToList();
+            // Validate uniqueId for mapping
+            if (allServiceToggleRecords.Any(s => s.UniqueId.Equals(serviceToggle.UniqueId)))
+            {
+                throw new HttpResourceNotFoundException($"Service Toggle with unique id '{serviceToggle.UniqueId}' already exists");
+            }
 
-                if (serviceToggle.IsEnabled)
-                {
-                    var existingBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s =>
-                        s.ServiceName.Equals(serviceToggle.ServiceName) &&
-                        s.ToggleName.Equals(serviceToggle.ToggleName) && s.IsEnabled);
+            switch (toggle.Type)
+            {
+                case Constants.WellKnownToggleType.Blue:
 
-                    if (existingBlueRecord == null)
+                    #region " BLUE Type Toggle "
+
+                    // Always isServiceExcuded = false for BLUE type toggle
+                    // ToggleName, ToggleValue, ServiceName/Version
+                    // T1, True, S1 : CREATE
+                    // T1, False, S1 : UPDATE and make it exclusive now for S1
+                    // T1, False, S2 : Prevent as now T1 with false can be used by S1 only
+                    // T1, True, S2 : CREATE
+                    // 
+                    // T2, True, S1 : CREATE
+                    // T2, False, S1 : UPDATE and exclusive now for S1
+                    // T2, False, S2 : Prevent as now T2 with false can be used by S1 only
+                    // T2, True, S2 : CREATE
+                    // 
+                    // T2, True, S1 : Alreday exists Skip
+                    // T2, False, S1 : T2 is now already exclusive for S1, Skip
+                    // T2, False, S2 : T2 is now already exclusive for S1, Skip
+                    // T2, True, S2 : Already exists
+
+                    // Check the well know type toggle
+                    if (serviceToggle.IsServiceExcluded)
                     {
-                        await _serviceToggleRepository.CreateAsync(serviceToggle);
+                        throw new HttpBadRequestException($"For BLUE Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
                     }
-                    else
-                    {
-                        throw new HttpBadRequestException($"The requested BLUE type service toggle with TRUE value is already registered.");
-                    }
-                }
-                else
-                {
-                    var exclusiveBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s =>
-                        s.ServiceName.Equals(serviceToggle.ServiceName) &&
-                        s.ServiceVersion.Equals(serviceToggle.ServiceVersion) &&
-                        s.ToggleName.Equals(serviceToggle.ToggleName) &&
-                        !s.IsEnabled);
 
-                    if (exclusiveBlueRecord != null)
+                    var serviceToggleTypeBlueRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Blue).ToList();
+
+                    if (serviceToggle.IsEnabled)
                     {
-                        exclusiveBlueRecord.IsEnabled = false;
-                        await _serviceToggleRepository.UpdateAsync(exclusiveBlueRecord.UniqueId, exclusiveBlueRecord);
-                    }
-                    else
-                    {
-                        var existingBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s => s.ToggleName.Equals(serviceToggle.ToggleName) && s.IsEnabled == false);
+                        var existingBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s =>
+                            s.Service.Name.Equals(serviceToggle.Service.Name) &&
+                            s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled);
 
                         if (existingBlueRecord == null)
                         {
-                            await _serviceToggleRepository.CreateAsync(serviceToggle);
+                            return await _serviceToggleRepository.CreateAsync(serviceToggle);
+                        }
+                        else
+                        {
+                            throw new HttpBadRequestException($"The requested BLUE type service toggle with TRUE value is already registered.");
                         }
                     }
-                }
-            }
-
-            #endregion
-
-            #region " GREEN Type toggle "
-            // T1, True , S1 : CREATE
-            // T1, True, S2 : Prevent, exclusive for S2
-            // T1, False , S1 : CREATE
-            // T1, False, S2 : CREATE
-            //
-            // T2, True, S1, isService Excuded=false : CREATE
-            // T2, True , S2, isService Excuded=false : Exclusive for S1
-            // T2, False, S1, isService Excuded=false : CREATE
-            // T2, False, S1, isService Excuded=false : Already exists
-
-            // Scenario 2 for Green well known type
-            if (serviceToggle.ToggleType == Constants.WellKnownToggleType.Green)
-            {
-                // Check the well know type toggle
-                if (serviceToggle.IsServiceExcluded)
-                {
-                    throw new HttpBadRequestException($"For GREEN Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
-                }
-
-                var serviceToggleTypeGreenRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.ToggleType == Constants.WellKnownToggleType.Green).ToList();
-                if (serviceToggle.IsEnabled)
-                {
-                    var exclusiveRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s =>
-                        s.ToggleName.Equals(serviceToggle.ToggleName) && s.IsEnabled == true);
-
-                    if (exclusiveRecord == null)
+                    else
                     {
-                        await _serviceToggleRepository.CreateAsync(serviceToggle);
-                    }
-                }
-                else
-                {
-                    var existingBlueRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s =>
-                        s.ServiceName.Equals(serviceToggle.ServiceName) &&
-                        s.ServiceVersion.Equals(serviceToggle.ServiceVersion) &&
-                        s.ToggleName.Equals(serviceToggle.ToggleName) && s.IsEnabled);
+                        var exclusiveBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s =>
+                            s.Service.Name.Equals(serviceToggle.Service.Name) &&
+                            s.Service.Version.Equals(serviceToggle.Service.Version) &&
+                            s.Toggle.Name.Equals(serviceToggle.Toggle.Name) &&
+                            s.IsEnabled);
 
-                    if (existingBlueRecord == null)
+                        if (exclusiveBlueRecord != null)
+                        {
+                            exclusiveBlueRecord.IsEnabled = false;
+                            return await _serviceToggleRepository.UpdateAsync(exclusiveBlueRecord.UniqueId, exclusiveBlueRecord);
+                        }
+                        else
+                        {
+                            var existingBlueRecord = serviceToggleTypeBlueRecords.FirstOrDefault(s => s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled == false);
+
+                            // Make toggle exclusive on first request itself for a service
+                            if (existingBlueRecord == null)
+                            {
+                                return await _serviceToggleRepository.CreateAsync(serviceToggle);
+                            }
+                            else
+                            {
+                                throw new HttpBadRequestException($"The requested BLUE type service toggle {serviceToggle.Toggle.Name} is exclusive for {existingBlueRecord.Service.Name}.");
+                            }
+                        }
+                    }
+                #endregion
+
+                case Constants.WellKnownToggleType.Green:
+
+                    #region " GREEN Type toggle "
+                    // T1, True , S1 : CREATE
+                    // T1, True, S2 : Prevent, exclusive for S2
+                    // T1, False , S1 : CREATE
+                    // T1, False, S2 : CREATE
+                    //
+                    // T2, True, S1, : CREATE
+                    // T2, True , S2: Exclusive for S1
+                    // T2, False, S1 : CREATE
+                    // T2, False, S1 : Already exists
+
+                    // Check the well know type toggle
+                    if (serviceToggle.IsServiceExcluded)
                     {
-                        await _serviceToggleRepository.CreateAsync(serviceToggle);
+                        throw new HttpBadRequestException($"For GREEN Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
                     }
-                }
+
+                    var serviceToggleTypeGreenRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Green).ToList();
+                    if (serviceToggle.IsEnabled)
+                    {
+                        var exclusiveRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s => s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled == true);
+
+                        if (exclusiveRecord == null)
+                        {
+                            return await _serviceToggleRepository.CreateAsync(serviceToggle);
+                        }
+                        else
+                        {
+                            throw new HttpBadRequestException($"The requested GREEN type service toggle {serviceToggle.Toggle.Name} is exclusive for {exclusiveRecord.Service.Name}.");
+                        }
+                    }
+                    else
+                    {
+                        var existingBlueRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s =>
+                            s.Service.Name.Equals(serviceToggle.Service.Name) &&
+                            s.Service.Version.Equals(serviceToggle.Service.Version) &&
+                            s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled == false);
+
+                        if (existingBlueRecord == null)
+                        {
+                            return await _serviceToggleRepository.CreateAsync(serviceToggle);
+                        }
+                        else
+                        {
+                            throw new HttpBadRequestException($"The requested GREEN type service toggle with FALSE value is already registered.");
+                        }
+                    }
+
+                #endregion
+                case Constants.WellKnownToggleType.Red:
+
+                    #region " RED Type toggle "
+                    var serviceToggleTypeRedRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Red).ToList();
+
+                    var existingRedRecord = serviceToggleTypeRedRecords.FirstOrDefault(s =>
+                    s.Service.Name.Equals(serviceToggle.Service.Name) &&
+                    s.Toggle.Name.Equals(serviceToggle.Toggle.Name) &&
+                    s.IsServiceExcluded == serviceToggle.IsServiceExcluded &&
+                    s.IsEnabled == serviceToggle.IsEnabled);
+
+                    var existingAlreadyExcludedRedRecord = serviceToggleTypeRedRecords.FirstOrDefault(s =>
+                        s.Service.Name.Equals(serviceToggle.Service.Name) &&
+                        s.Toggle.Name.Equals(serviceToggle.Toggle.Name) &&
+                        s.IsServiceExcluded == true);
+
+                    // If a service is already excluded, dont do anything
+                    if (existingAlreadyExcludedRedRecord != null)
+                    {
+                        return null;
+                    }
+
+                    if (existingRedRecord == null)
+                    {
+                        return await _serviceToggleRepository.CreateAsync(serviceToggle);
+                    }
+                    else
+                    {
+                        throw new HttpBadRequestException($"The requested RED type service toggle is already registered.");
+                    }
+
+                #endregion
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+        }
 
-            #endregion
-            #region " RED Type toggle "
-            // T1, True, S1, IsService Excuded=true : CREATE
-            // T1, True, S1, IsService Excuded=true : Duplicate skip
-            // T2, True, S1, IsService Excuded=false : CREATE
-            // T1, false, S1 : 
-
-            // Scenario 3 for Red well known type
-            if (serviceToggle.ToggleType == Constants.WellKnownToggleType.Red)
+        // DELETE: api/Toggles/5
+        [HttpDelete("{UniqueId}")]
+        public async Task Delete([FromRoute] string uniqueId)
+        {
+            var result = await _serviceToggleRepository.DeleteAsync(uniqueId);
+            if (!result)
             {
-                var serviceToggleTypeRedRecords = allServiceToggleRecords as IList<ServiceToggle> ??
-                                                  allServiceToggleRecords.Where(s =>
-                                                      s.ToggleType == Constants.WellKnownToggleType.Red).ToList();
-
-                var existingBlueRecord = serviceToggleTypeRedRecords.FirstOrDefault(s =>
-                    s.ServiceName.Equals(serviceToggle.ServiceName) &&
-                    s.ToggleName.Equals(serviceToggle.ToggleName) && s.IsEnabled);
-
-                if (existingBlueRecord == null)
-                {
-                    await _serviceToggleRepository.CreateAsync(serviceToggle);
-                }
+                throw new HttpResourceNotFoundException($"Toggle with unique id '{uniqueId}' doesn't exist");
             }
-
-            #endregion
-            return serviceToggle;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Toggler.Infrastructure.Repositories
         }
 
         // Add entities
-        public DbSet<Toggle> Toggles { get; set; } //TODO: Remove this model as ServiceToggle contains all the necessary properties
+        public DbSet<Toggle> Toggles { get; set; } 
         public DbSet<ServiceToggle> ServiceToggles { get; set; }
     }
 }

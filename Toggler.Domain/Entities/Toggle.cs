@@ -10,6 +10,7 @@ namespace Toggler.Domain.Entities
         [Required]
         public string Name { get; set; }
         public string Description { get; set; }
-        public Constants.WellKnownToggleType ToggleType { get; set; }
+        [Required]
+        public Constants.WellKnownToggleType Type { get; set; }
     }
 }

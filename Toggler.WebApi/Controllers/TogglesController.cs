@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Toggler.Common;
@@ -13,11 +14,12 @@ namespace Toggler.WebApi.Controllers
     public class TogglesController : ControllerBase
     {
         private readonly IRepository<Toggle> _toggleRepository;
+        private readonly IRepository<ServiceToggle> _serviceToggleRepository;
 
-        public TogglesController(IRepository<Toggle> toggleRepository)
+        public TogglesController(IRepository<Toggle> toggleRepository, IRepository<ServiceToggle> serviceToggleRepository)
         {
             _toggleRepository = toggleRepository;
-
+            _serviceToggleRepository = serviceToggleRepository;
         }
 
         // GET: api/Toggles
@@ -78,6 +80,15 @@ namespace Toggler.WebApi.Controllers
             }
         }
 
+        private async void ValidateDeleteToggleInfo(Toggle toggle)
+        {
+            var serviceToggleMapping = await _serviceToggleRepository.GetAllAsync();
+            if (serviceToggleMapping.Any(s => s.Toggle.Name.Equals(toggle.Name)))
+            {
+                throw new HttpBadRequestException($"Toggle {toggle.Name} is being used by services. So can not delete it.");
+            }
+        }
+
         private void ValidateToggleInfo(Toggle toggle)
         {
             if (string.IsNullOrWhiteSpace(toggle.Name))
@@ -86,7 +97,7 @@ namespace Toggler.WebApi.Controllers
             }
 
             // Check the well know type toggle
-            if (!Enum.IsDefined(typeof(Constants.WellKnownToggleType), toggle.ToggleType))
+            if (!Enum.IsDefined(typeof(Constants.WellKnownToggleType), toggle.Type))
             {
                 throw new HttpBadRequestException($"Toggle type is not a well defined type. The well defined types are { string.Join(",", Enum.GetNames(typeof(Constants.WellKnownToggleType)))}");
             }
