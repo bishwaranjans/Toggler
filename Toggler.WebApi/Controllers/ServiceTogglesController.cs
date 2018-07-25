@@ -9,13 +9,23 @@ using Toggler.Domain.SeedWork.Interfaces;
 
 namespace Toggler.WebApi.Controllers
 {
+
+    /// <summary>
+    /// Service toggle mapping API controller
+    /// </summary>
+    /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Route("api/[controller]")]
     [ApiController]
     public class ServiceTogglesController : ControllerBase
     {
         private readonly IRepository<Toggle> _toggleRepository;
         private readonly IRepository<ServiceToggle> _serviceToggleRepository;
-
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceTogglesController"/> class.
+        /// </summary>
+        /// <param name="toggleRepository">The toggle repository.</param>
+        /// <param name="serviceToggleRepository">The service toggle repository.</param>
         public ServiceTogglesController(IRepository<Toggle> toggleRepository, IRepository<ServiceToggle> serviceToggleRepository)
         {
             _serviceToggleRepository = serviceToggleRepository;
@@ -23,6 +33,12 @@ namespace Toggler.WebApi.Controllers
         }
 
         // GET: api/ Service Toggles
+        /// <summary>
+        /// Gets the specified service details along with the mapped toggles with their values.
+        /// </summary>
+        /// <param name="serviceName">Name of the service.</param>
+        /// <param name="version">The version.</param>
+        /// <returns>Returns list of mapped service toggles.</returns>
         [HttpGet]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -35,6 +51,27 @@ namespace Toggler.WebApi.Controllers
         }
 
         // POST: api/Service Toggles
+        /// <summary>
+        /// Posts the specified service toggle.
+        /// </summary>
+        /// <param name="serviceToggle">The service toggle.</param>
+        /// <returns></returns>
+        /// <exception cref="HttpResourceNotFoundException">
+        /// </exception>
+        /// <exception cref="HttpBadRequestException">
+        /// For BLUE Toggle type IsServiceExcluded value should be FALSE as it is not applicable.
+        /// or
+        /// The requested BLUE type service toggle with TRUE value is already registered.
+        /// or
+        /// or
+        /// For GREEN Toggle type IsServiceExcluded value should be FALSE as it is not applicable.
+        /// or
+        /// or
+        /// The requested GREEN type service toggle with FALSE value is already registered.
+        /// or
+        /// The requested RED type service toggle is already registered.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         [HttpPost]
         public async Task<ServiceToggle> Post([FromBody] ServiceToggle serviceToggle)
         {
@@ -80,10 +117,10 @@ namespace Toggler.WebApi.Controllers
                     // Check the well know type toggle
                     if (serviceToggle.IsServiceExcluded)
                     {
-                        throw new HttpBadRequestException($"For BLUE Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
+                        throw new HttpBadRequestException("For BLUE Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
                     }
 
-                    var serviceToggleTypeBlueRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Blue).ToList();
+                    var serviceToggleTypeBlueRecords = allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Blue).ToList();
 
                     if (serviceToggle.IsEnabled)
                     {
@@ -97,7 +134,7 @@ namespace Toggler.WebApi.Controllers
                         }
                         else
                         {
-                            throw new HttpBadRequestException($"The requested BLUE type service toggle with TRUE value is already registered.");
+                            throw new HttpBadRequestException("The requested BLUE type service toggle with TRUE value is already registered.");
                         }
                     }
                     else
@@ -146,13 +183,13 @@ namespace Toggler.WebApi.Controllers
                     // Check the well know type toggle
                     if (serviceToggle.IsServiceExcluded)
                     {
-                        throw new HttpBadRequestException($"For GREEN Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
+                        throw new HttpBadRequestException("For GREEN Toggle type IsServiceExcluded value should be FALSE as it is not applicable.");
                     }
 
-                    var serviceToggleTypeGreenRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Green).ToList();
+                    var serviceToggleTypeGreenRecords = allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Green).ToList();
                     if (serviceToggle.IsEnabled)
                     {
-                        var exclusiveRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s => s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled == true);
+                        var exclusiveRecord = serviceToggleTypeGreenRecords.FirstOrDefault(s => s.Toggle.Name.Equals(serviceToggle.Toggle.Name) && s.IsEnabled);
 
                         if (exclusiveRecord == null)
                         {
@@ -176,7 +213,7 @@ namespace Toggler.WebApi.Controllers
                         }
                         else
                         {
-                            throw new HttpBadRequestException($"The requested GREEN type service toggle with FALSE value is already registered.");
+                            throw new HttpBadRequestException("The requested GREEN type service toggle with FALSE value is already registered.");
                         }
                     }
 
@@ -184,7 +221,7 @@ namespace Toggler.WebApi.Controllers
                 case Constants.WellKnownToggleType.Red:
 
                     #region " RED Type toggle "
-                    var serviceToggleTypeRedRecords = allServiceToggleRecords as IList<ServiceToggle> ?? allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Red).ToList();
+                    var serviceToggleTypeRedRecords = allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Red).ToList();
 
                     var existingRedRecord = serviceToggleTypeRedRecords.FirstOrDefault(s =>
                     s.Service.Name.Equals(serviceToggle.Service.Name) &&
@@ -195,7 +232,7 @@ namespace Toggler.WebApi.Controllers
                     var existingAlreadyExcludedRedRecord = serviceToggleTypeRedRecords.FirstOrDefault(s =>
                         s.Service.Name.Equals(serviceToggle.Service.Name) &&
                         s.Toggle.Name.Equals(serviceToggle.Toggle.Name) &&
-                        s.IsServiceExcluded == true);
+                        s.IsServiceExcluded);
 
                     // If a service is already excluded, dont do anything
                     if (existingAlreadyExcludedRedRecord != null)
@@ -209,7 +246,7 @@ namespace Toggler.WebApi.Controllers
                     }
                     else
                     {
-                        throw new HttpBadRequestException($"The requested RED type service toggle is already registered.");
+                        throw new HttpBadRequestException("The requested RED type service toggle is already registered.");
                     }
 
                 #endregion
@@ -220,6 +257,12 @@ namespace Toggler.WebApi.Controllers
         }
 
         // DELETE: api/Toggles/5
+        /// <summary>
+        /// Deletes the specified service toggle mapping.
+        /// </summary>
+        /// <param name="uniqueId">The unique identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="HttpResourceNotFoundException"></exception>
         [HttpDelete("{UniqueId}")]
         public async Task Delete([FromRoute] string uniqueId)
         {

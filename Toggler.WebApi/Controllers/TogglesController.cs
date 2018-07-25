@@ -9,6 +9,10 @@ using Toggler.Domain.SeedWork.Interfaces;
 
 namespace Toggler.WebApi.Controllers
 {
+    /// <summary>
+    /// Toggle API controller
+    /// </summary>
+    /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Route("api/[controller]")]
     [ApiController]
     public class TogglesController : ControllerBase
@@ -16,6 +20,11 @@ namespace Toggler.WebApi.Controllers
         private readonly IRepository<Toggle> _toggleRepository;
         private readonly IRepository<ServiceToggle> _serviceToggleRepository;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TogglesController"/> class.
+        /// </summary>
+        /// <param name="toggleRepository">The toggle repository.</param>
+        /// <param name="serviceToggleRepository">The service toggle repository.</param>
         public TogglesController(IRepository<Toggle> toggleRepository, IRepository<ServiceToggle> serviceToggleRepository)
         {
             _toggleRepository = toggleRepository;
@@ -23,6 +32,10 @@ namespace Toggler.WebApi.Controllers
         }
 
         // GET: api/Toggles
+        /// <summary>
+        /// Gets all the toggles.
+        /// </summary>
+        /// <returns>Returns the list of toggles.</returns>
         [HttpGet]
         [ProducesResponseType(200)]
         public async Task<IEnumerable<Toggle>> Get()
@@ -31,7 +44,12 @@ namespace Toggler.WebApi.Controllers
             return await _toggleRepository.GetAllAsync();
         }
 
-        // GET: api/Toggles/5
+        /// <summary>
+        /// Gets the toggle with a specified unique name.
+        /// </summary>
+        /// <param name="name">The unique name of toggle.</param>
+        /// <returns>Returns the found toggle.</returns>
+        /// <exception cref="HttpResourceNotFoundException"></exception>
         [HttpGet("{name}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -52,7 +70,12 @@ namespace Toggler.WebApi.Controllers
             return toggle;
         }
 
-        // PUT: api/Toggles/5
+        /// <summary>
+        /// Updates the specified toggle
+        /// </summary>
+        /// <param name="name">The unique name of the toggle.</param>
+        /// <param name="toggle">The toggle.</param>
+        /// <returns>Returns the updated toggle.</returns>
         [HttpPut("{name}")]
         public Task<Toggle> Put(string name, [FromBody] Toggle toggle)
         {
@@ -60,7 +83,11 @@ namespace Toggler.WebApi.Controllers
             return _toggleRepository.UpdateAsync(name, toggle);
         }
 
-        // POST: api/Toggles
+        /// <summary>
+        /// Creates the toggle
+        /// </summary>
+        /// <param name="toggle">The toggle.</param>
+        /// <returns>Returns the created toggle.</returns>
         [HttpPost]
         public Task Post([FromBody] Toggle toggle)
         {
@@ -69,10 +96,16 @@ namespace Toggler.WebApi.Controllers
             return _toggleRepository.CreateAsync(toggle);
         }
 
-        // DELETE: api/Toggles/5
+        /// <summary>
+        /// Deletes the specified toggle with it' unique name.
+        /// </summary>
+        /// <param name="name">The unique toggle name.</param>
+        /// <returns></returns>
+        /// <exception cref="HttpResourceNotFoundException"></exception>
         [HttpDelete("{name}")]
         public async Task Delete([FromRoute] string name)
         {
+            ValidateDeleteToggleInfo(name);
             var result = await _toggleRepository.DeleteAsync(name);
             if (!result)
             {
@@ -80,15 +113,28 @@ namespace Toggler.WebApi.Controllers
             }
         }
 
-        private async void ValidateDeleteToggleInfo(Toggle toggle)
+        /// <summary>
+        /// Validates the toggle before deletion.
+        /// </summary>
+        /// <param name="name">The toggle name.</param>
+        /// <exception cref="HttpBadRequestException"></exception>
+        private async void ValidateDeleteToggleInfo(string name)
         {
             var serviceToggleMapping = await _serviceToggleRepository.GetAllAsync();
-            if (serviceToggleMapping.Any(s => s.Toggle.Name.Equals(toggle.Name)))
+            if (serviceToggleMapping.Any(s => s.Toggle.Name.Equals(name)))
             {
-                throw new HttpBadRequestException($"Toggle {toggle.Name} is being used by services. So can not delete it.");
+                throw new HttpBadRequestException($"Toggle {name} is being used by services. So can not delete it.");
             }
         }
 
+        /// <summary>
+        /// Validates the toggle information.
+        /// </summary>
+        /// <param name="toggle">The toggle.</param>
+        /// <exception cref="HttpBadRequestException">
+        /// Toggle name can\'t be empty or whitespace.
+        /// or
+        /// </exception>
         private void ValidateToggleInfo(Toggle toggle)
         {
             if (string.IsNullOrWhiteSpace(toggle.Name))
@@ -103,6 +149,11 @@ namespace Toggler.WebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Checks the existence of toggle.
+        /// </summary>
+        /// <param name="toggle">The toggle.</param>
+        /// <exception cref="HttpBadRequestException">Toggle already exists.</exception>
         private void CheckExistence(Toggle toggle)
         {
             // Check existence

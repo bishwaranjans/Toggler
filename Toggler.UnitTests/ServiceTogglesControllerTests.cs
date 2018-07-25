@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -369,7 +368,7 @@ namespace Toggler.UnitTests
 
             var serviceToggleWithFalse = new ServiceToggle()
             {
-                UniqueId = "1",
+                UniqueId = "2",
                 IsEnabled = false,
                 Service = service,
                 Toggle = toggleTypeBlueNamedT1,
@@ -418,6 +417,15 @@ namespace Toggler.UnitTests
                 IsServiceExcluded = false
             };
 
+            var serviceToggle2 = new ServiceToggle()
+            {
+                UniqueId = "2",
+                IsEnabled = false,
+                Service = service1,
+                Toggle = toggleTypeBlueNamedT1,
+                IsServiceExcluded = false
+            };
+
             var list = new List<ServiceToggle>
             {
                 serviceToggle
@@ -425,7 +433,7 @@ namespace Toggler.UnitTests
             serviceToggleRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(list);
 
             var exception = await Assert.ThrowsAsync<HttpBadRequestException>(
-                async () => await sut.Post(serviceToggle));
+                async () => await sut.Post(serviceToggle2));
 
             Assert.Equal("The requested BLUE type service toggle T1 is exclusive for S1.", exception.Message);
         }
@@ -537,14 +545,24 @@ namespace Toggler.UnitTests
                 IsServiceExcluded = false
             };
 
+            var serviceToggle2 = new ServiceToggle()
+            {
+                UniqueId = "2",
+                IsEnabled = true,
+                Service = service1,
+                Toggle = toggleTypeBlueNamedT1,
+                IsServiceExcluded = false
+            };
+
             var list = new List<ServiceToggle>
             {
                 serviceToggle
             };
             serviceToggleRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(list);
 
+          
             var exception = await Assert.ThrowsAsync<HttpBadRequestException>(
-                async () => await sut.Post(serviceToggle));
+                async () => await sut.Post(serviceToggle2));
 
             Assert.Equal("The requested GREEN type service toggle T1 is exclusive for S1.", exception.Message);
         }
@@ -623,7 +641,7 @@ namespace Toggler.UnitTests
 
             var serviceToggleTypeBlueDuplicate = new ServiceToggle()
             {
-                UniqueId = "2",
+                UniqueId = "3",
                 IsEnabled = false,
                 Service = service,
                 Toggle = toggle,
