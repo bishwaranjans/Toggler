@@ -95,26 +95,26 @@ namespace Toggler.WebApi.Controllers
 
             switch (toggle.Type)
             {
-                case Constants.WellKnownToggleType.Blue:
+                case Constants.WellKnownToggleType.Blue: // TODO: Make it more modular
 
-                    #region " BLUE Type Toggle "
+                    #region " BLUE Type Toggle " 
 
                     // Always isServiceExcuded = false for BLUE type toggle
-                    // ToggleName, ToggleValue, ServiceName/Version
-                    // T1, True, S1 : CREATE
-                    // T1, False, S1 : UPDATE and make it exclusive now for S1
-                    // T1, False, S2 : Prevent as now T1 with false can be used by S1 only
-                    // T1, True, S2 : CREATE
+                    // ToggleName   ToggleValue  ServiceName    Version : Result
+                    // T1           True         S1             1.0     : CREATE
+                    // T1           False        S1             1.0     : UPDATE and make it exclusive now for S1
+                    // T1           False        S2             1.0     : Prevent as now T1 with false can be used by S1 only
+                    // T1           True         S2             1.0     : CREATE
                     // 
-                    // T2, True, S1 : CREATE
-                    // T2, False, S1 : UPDATE and exclusive now for S1
-                    // T2, False, S2 : Prevent as now T2 with false can be used by S1 only
-                    // T2, True, S2 : CREATE
+                    // T2           True         S1             1.0     : CREATE
+                    // T2           False        S1             1.0     : UPDATE and exclusive now for S1
+                    // T2           False        S2             1.0     : Prevent as now T2 with false can be used by S1 only
+                    // T2           True         S2             1.0     : CREATE
                     // 
-                    // T2, True, S1 : Alreday exists Skip
-                    // T2, False, S1 : T2 is now already exclusive for S1, Skip
-                    // T2, False, S2 : T2 is now already exclusive for S1, Skip
-                    // T2, True, S2 : Already exists
+                    // T2           True         S1             1.0     : Alreday exists Skip
+                    // T2           False        S1             1.0     : T2 is now already exclusive for S1, Skip
+                    // T2           False        S2             1.0     : T2 is now already exclusive for S1, Skip
+                    // T2           True         S2             1.0     : Already exists
 
                     // Check the well know type toggle
                     if (serviceToggle.IsServiceExcluded)
@@ -169,18 +169,20 @@ namespace Toggler.WebApi.Controllers
                     }
                 #endregion
 
-                case Constants.WellKnownToggleType.Green:
+                case Constants.WellKnownToggleType.Green: // TODO: Make it more modular
 
                     #region " GREEN Type toggle "
-                    // T1, True , S1 : CREATE
-                    // T1, True, S2 : Prevent, exclusive for S2
-                    // T1, False , S1 : CREATE
-                    // T1, False, S2 : CREATE
+                    // Always isServiceExcuded = false for GREEN type toggle
+                    // ToggleName   ToggleValue  ServiceName    Version : Result
+                    // T1           True         S1             1.0     : CREATE
+                    // T1           True         S2             1.0     : Prevent, exclusive for S1
+                    // T1           False        S1             1.0     : CREATE
+                    // T1           False        S2             1.0     : CREATE
                     //
-                    // T2, True, S1, : CREATE
-                    // T2, True , S2: Exclusive for S1
-                    // T2, False, S1 : CREATE
-                    // T2, False, S1 : Already exists
+                    // T2           True         S1             1.0     : CREATE
+                    // T2           True         S2             1.0     : Prevent, Exclusive for S1
+                    // T2           False        S1             1.0     : CREATE
+                    // T2           False        S1             1.0     : Already exists
 
                     // Check the well know type toggle
                     if (serviceToggle.IsServiceExcluded)
@@ -220,7 +222,8 @@ namespace Toggler.WebApi.Controllers
                     }
 
                 #endregion
-                case Constants.WellKnownToggleType.Red:
+
+                case Constants.WellKnownToggleType.Red: // TODO: Make it more modular
 
                     #region " RED Type toggle "
                     var serviceToggleTypeRedRecords = allServiceToggleRecords.Where(s => s.Toggle.Type == Constants.WellKnownToggleType.Red).ToList();
@@ -251,7 +254,7 @@ namespace Toggler.WebApi.Controllers
                         throw new HttpBadRequestException("The requested RED type service toggle is already registered.");
                     }
 
-                #endregion
+                #endregion 
 
                 default:
                     throw new ArgumentOutOfRangeException();
