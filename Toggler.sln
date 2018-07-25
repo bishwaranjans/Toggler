@@ -3,15 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.WebApi", "Toggler.WebApi\Toggler.WebApi.csproj", "{4CB0E41B-EDCA-4F1D-A07F-CC6C85D2505E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toggler.WebApi", "Toggler.WebApi\Toggler.WebApi.csproj", "{4CB0E41B-EDCA-4F1D-A07F-CC6C85D2505E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.UnitTests", "Toggler.UnitTests\Toggler.UnitTests.csproj", "{B6D16E6F-0A1B-4653-9497-80EEEFBBDFA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toggler.UnitTests", "Toggler.UnitTests\Toggler.UnitTests.csproj", "{B6D16E6F-0A1B-4653-9497-80EEEFBBDFA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.Domain", "Toggler.Domain\Toggler.Domain.csproj", "{0605D711-EDE2-4E62-B30F-077D6A7FEFEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toggler.Domain", "Toggler.Domain\Toggler.Domain.csproj", "{0605D711-EDE2-4E62-B30F-077D6A7FEFEA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.Infrastructure", "Toggler.Infrastructure\Toggler.Infrastructure.csproj", "{B3D64569-8DBD-46CF-AC59-2FF0B86947E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toggler.Infrastructure", "Toggler.Infrastructure\Toggler.Infrastructure.csproj", "{B3D64569-8DBD-46CF-AC59-2FF0B86947E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.Common", "Toggler.Common\Toggler.Common.csproj", "{4C268C6E-1F29-4120-9310-2D8EFABFB09D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toggler.Common", "Toggler.Common\Toggler.Common.csproj", "{4C268C6E-1F29-4120-9310-2D8EFABFB09D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.IdentityServer", "Toggler.IdentityServer\Toggler.IdentityServer.csproj", "{E9C36F70-990D-4839-9E1B-AF0CEAC94508}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toggler.ConsoleClient", "Toggler.ConsoleClient\Toggler.ConsoleClient.csproj", "{E259A6C7-4ADE-4811-94D5-6428253C7410}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +43,14 @@ Global
 		{4C268C6E-1F29-4120-9310-2D8EFABFB09D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C268C6E-1F29-4120-9310-2D8EFABFB09D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C268C6E-1F29-4120-9310-2D8EFABFB09D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9C36F70-990D-4839-9E1B-AF0CEAC94508}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9C36F70-990D-4839-9E1B-AF0CEAC94508}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9C36F70-990D-4839-9E1B-AF0CEAC94508}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9C36F70-990D-4839-9E1B-AF0CEAC94508}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E259A6C7-4ADE-4811-94D5-6428253C7410}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E259A6C7-4ADE-4811-94D5-6428253C7410}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E259A6C7-4ADE-4811-94D5-6428253C7410}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E259A6C7-4ADE-4811-94D5-6428253C7410}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

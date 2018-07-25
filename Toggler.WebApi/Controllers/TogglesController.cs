@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Toggler.Common;
 using Toggler.Domain.Entities;
@@ -15,6 +16,7 @@ namespace Toggler.WebApi.Controllers
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TogglesController : ControllerBase
     {
         private readonly IRepository<Toggle> _toggleRepository;

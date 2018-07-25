@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -39,6 +40,14 @@ namespace Toggler.WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
+                {
+                    options.Authority = "http://localhost:5000"; //Identity Server URL
+                    options.RequireHttpsMetadata = false;// make it false since we are not using https. Only for development
+                    options.ApiName = "toggler_auth_api"; //api name which should be registered in IdentityServer
+                });
+
             services.AddMvcCore()
                 .AddApiExplorer()
                 .AddJsonFormatters(
@@ -53,16 +62,16 @@ namespace Toggler.WebApi
             {
                 var connectionString = $"Data Source={_appHost.ContentRootPath}/data.db"; //TODO: Decide to put in appsettings.json
 
-                 // SQLite kindly creates a DB-file if it doesn't exist, but it doesn't create a directory. 
-                 // We need to ensure that the directory exists. 
+                // SQLite kindly creates a DB-file if it doesn't exist, but it doesn't create a directory. 
+                // We need to ensure that the directory exists. 
 
                 var regex = new Regex("Data Source=([^;]+);?");
-                 var pathMatch = regex.Match(connectionString);
-                 var dbFilePath = pathMatch.Groups[1].Value;
-                 Directory.CreateDirectory(Path.GetDirectoryName(dbFilePath));
+                var pathMatch = regex.Match(connectionString);
+                var dbFilePath = pathMatch.Groups[1].Value;
+                Directory.CreateDirectory(Path.GetDirectoryName(dbFilePath));
 
-                 options.UseSqlite(connectionString);
-             });
+                options.UseSqlite(connectionString);
+            });
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
